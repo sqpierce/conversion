@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<project name="Rules" basedir="." default="jar">
+    <property name="src" value="src"/>
+    <property name="output" value="build"/>
+	<property name="testoutput" value="build/test"/>
+    <property name="scala" value="/path/to/your/scala/dir"/>
+    <property name="scala-library.jar" value="${scala}/lib/scala-library.jar" />
+	<property name="scala-compiler.jar" value="${scala}/lib/scala-compiler.jar" />
+	<property name="scalatest.jar" value="${scala}/lib/scalatest-1.0.jar" />
+
+	<target name="init">
+	    <path id="build.classpath">
+	      <pathelement location="${scala-library.jar}"   />
+	      <pathelement location="${scala-compiler.jar}"   />
+	    </path>
+		 <path id="scalatest.classpath">
+		    <pathelement location="${scalatest.jar}"/>
+		    <pathelement location="${scala-library.jar}"/>
+			<pathelement location="build"/>
+			<pathelement location="build/test"/>
+		  </path>
+	    <taskdef resource="scala/tools/ant/antlib.xml">
+	      <classpath>
+	        <pathelement location="${scala-compiler.jar}"   />
+	        <pathelement location="${scala-library.jar}"   />
+	      </classpath>
+	    </taskdef>
+		<taskdef name="scalatest" classname="org.scalatest.tools.ScalaTestAntTask">
+		   <classpath refid="scalatest.classpath"/>
+		 </taskdef>
+	  </target>
+
+    <target name="compile" depends="create">
+		<scalac srcdir="${src}" destdir="${output}" classpathref="build.classpath">
+			<include name="*.scala" />
+		</scalac>
+		<scalac srcdir="test" destdir="${testoutput}" classpathref="scalatest.classpath">
+			<include name="*.scala" />
+		</scalac>
+    </target>
+
+	<target name="test" depends="compile">
+		<scalatest>
+			<runpath refid="scalatest.classpath"/>
+			<suite classname="UnitTestSuite"/>
+			<suite classname="AcceptanceTestSuite"/>
+		</scalatest>
+	</target>
+
+	<!-- TODO: don't include test files in final jar -->
+    <target name="jar" depends="test">
+        <jar destfile="rules.jar">
+            <fileset dir="${output}" excludes="test/*"/>
+        </jar>
+    </target>
+
+    <target name="clean" depends="init">
+        <delete dir="${output}"/>
+		<delete file="rules.jar"/>
+    </target>
+
+    <target name="create" depends="clean">
+        <mkdir dir="${output}"/>
+        <mkdir dir="${testoutput}"/>
+    </target>
+
+</project>
